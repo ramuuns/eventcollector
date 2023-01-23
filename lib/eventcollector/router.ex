@@ -11,8 +11,9 @@ defmodule Eventcollector.Router do
 
   post "/halt" do
     conn |> IO.inspect()
+    allowed_ips = Application.fetch_env!(:eventcollector, :halt_allow_ips)
 
-    if conn.remote_ip == {127, 0, 0, 1} do
+    if MapSet.member?(allowed_ips, conn.remote_ip) do
       Eventcollector.Collector.halt(EventCollector)
       System.stop(0)
     end

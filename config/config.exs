@@ -285,4 +285,17 @@ json_config = config_path |> File.read!() |> JsonParser.parse()
 config :eventcollector,
   graphite_host: json_config["graphite_host"] |> to_charlist,
   graphite_port: json_config["graphite_port"],
-  app_port: json_config["app_port"]
+  app_port: json_config["app_port"],
+  halt_allow_ips:
+    json_config["halt_allow_ips"]
+    |> Enum.map(fn ip ->
+      [a, b, c, d] =
+        ip
+        |> String.split(".")
+        |> Enum.map(fn i ->
+          i |> String.to_integer()
+        end)
+
+      {a, b, c, d}
+    end)
+    |> Enum.reduce(MapSet.new(), fn ip, set -> set |> MapSet.put(ip) end)
