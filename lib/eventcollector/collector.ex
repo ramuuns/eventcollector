@@ -69,7 +69,7 @@ defmodule Eventcollector.Collector do
 
   @impl true
   def handle_info(:hourly, {minutely, quarterly, hourly}) do
-    Process.send_after(self(), :hourly, 60 * 1000)
+    Process.send_after(self(), :hourly, 60 * 60 * 1000)
     store_when(60 * 60 * 1000, :hourly)
     process_data(hourly, :hourly)
     {:noreply, {minutely, quarterly, []}}
