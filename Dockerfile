@@ -9,4 +9,4 @@ ADD lib lib
 RUN mix do local.hex --force, local.rebar --force
 RUN mix deps.get
 RUN mix compile
-ENTRYPOINT mix run --no-hup
+ENTRYPOINT mix run --no-halt
