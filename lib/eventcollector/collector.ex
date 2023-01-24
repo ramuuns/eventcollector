@@ -143,7 +143,28 @@ defmodule Eventcollector.Collector do
     |> Enum.reduce(result, fn key, result ->
       result |> Map.put(key, Map.get(result, key, 0) + 1)
     end)
+    |> maybe_count_errors_warnings(item)
   end
+
+  def maybe_count_errors_warnings(result, %{
+        "persona" => persona,
+        "action" => action,
+        "tuning" => %{"nr_errors" => nr_errors, "nr_warnings" => nr_warnings}
+      }) do
+    sums = [
+      {"#{persona}.all.nr_errors", nr_errors},
+      {"#{persona}.all.nr_warnings", nr_warnings},
+      {"#{persona}.action.#{action}.nr_errors", nr_errors},
+      {"#{persona}.action.#{action}.nr_warnings", nr_warnings}
+    ]
+
+    sums
+    |> Enum.reduce(result, fn {key, value}, result ->
+      result |> Map.put(key, Map.get(result, key, 0) + value)
+    end)
+  end
+
+  def maybe_count_errors_warnings(result, _), do: result
 
   defp add_to_averages_and_histograms(result, item) do
     persona = item["persona"]
