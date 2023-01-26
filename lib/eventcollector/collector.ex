@@ -3,6 +3,7 @@ defmodule Eventcollector.Collector do
 
   @impl true
   def init(_) do
+    ensure_db()
     {m_send, m_data} = get_initial_state(:minutely)
     {q_send, q_data} = get_initial_state(:quarterly)
     {h_send, h_data} = get_initial_state(:hourly)
@@ -35,11 +36,12 @@ defmodule Eventcollector.Collector do
            event},
         {minutely, quarterly, hourly}
       ) do
+    Frog.handle_event(event)
     {:noreply, {[event | minutely], [event | quarterly], [event | hourly]}}
   end
 
   @impl true
-  def handle_cast({:add_event, ev}, state) do
+  def handle_cast({:add_event, _ev}, state) do
     {:noreply, state}
   end
 
@@ -72,6 +74,7 @@ defmodule Eventcollector.Collector do
     Process.send_after(self(), :hourly, 60 * 60 * 1000)
     store_when(60 * 60 * 1000, :hourly)
     process_data(hourly, :hourly)
+    Frog.cleanup()
     {:noreply, {minutely, quarterly, []}}
   end
 
@@ -250,5 +253,22 @@ defmodule Eventcollector.Collector do
       end
 
     {the_when, the_data}
+  end
+
+  defp ensure_db() do
+    unless File.exists?("/opt/eventcollector/data/events.db") do
+      {:ok, db} = Depo.open(create: "/opt/eventcollector/data/events.db")
+
+      Depo.transact(db, fn ->
+        Depo.write(db, "CREATE TABLE events(id, epoch, event)")
+
+        Depo.write(
+          db,
+          "CREATE TABLE errors_warnings (event_id, epoch, persona, action, the_request, type, key, item)"
+        )
+      end)
+
+      :ok = Depo.close(db)
+    end
   end
 end

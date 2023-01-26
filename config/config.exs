@@ -298,4 +298,5 @@ config :eventcollector,
 
       {a, b, c, d}
     end)
-    |> Enum.reduce(MapSet.new(), fn ip, set -> set |> MapSet.put(ip) end)
+    |> Enum.reduce(MapSet.new(), fn ip, set -> set |> MapSet.put(ip) end),
+  frog_data_retention_days: Map.get(json_config, "frog_data_retention_days", 14)
