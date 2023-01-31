@@ -149,17 +149,32 @@ defmodule Eventcollector.Collector do
     |> maybe_count_errors_warnings(item)
   end
 
-  def maybe_count_errors_warnings(result, %{
-        "persona" => persona,
-        "action" => action,
-        "tuning" => %{"nr_errors" => nr_errors, "nr_warnings" => nr_warnings}
-      }) do
+  def maybe_count_errors_warnings(
+        result,
+        %{
+          "persona" => persona,
+          "action" => action,
+          "tuning" => %{"nr_errors" => nr_errors, "nr_warnings" => nr_warnings}
+        } = item
+      ) do
     sums = [
       {"#{persona}.all.nr_errors", nr_errors},
       {"#{persona}.all.nr_warnings", nr_warnings},
       {"#{persona}.action.#{action}.nr_errors", nr_errors},
       {"#{persona}.action.#{action}.nr_warnings", nr_warnings}
     ]
+
+    sums =
+      case item do
+        %{"tuning" => %{"nr_queries" => nr_queries}} ->
+          [
+            {"#{persona}.all.nr_queries", nr_queries},
+            {"#{persona}.action.#{action}.nr_queries", nr_queries} | sums
+          ]
+
+        _ ->
+          sums
+      end
 
     sums
     |> Enum.reduce(result, fn {key, value}, result ->
@@ -178,6 +193,19 @@ defmodule Eventcollector.Collector do
       {"#{persona}.all.wallclock_ms", wallclock_ms},
       {"#{persona}.action.#{action}.wallclock_ms", wallclock_ms}
     ]
+
+    keys =
+      case item do
+        %{"tuning" => %{"wallclock_queries" => wallclock_queries}} ->
+          [
+            {"#{persona}.all.wallclock_queries", wallclock_queries},
+            {"#{persona}.action.#{action}.wallclock_queries", wallclock_queries}
+            | keys
+          ]
+
+        _ ->
+          keys
+      end
 
     keys
     |> Enum.reduce(result, fn {key, value}, result ->
@@ -242,14 +270,14 @@ defmodule Eventcollector.Collector do
             0
           ]) * 1000
 
-        {:error, reason} ->
+        {:error, _reason} ->
           mode_to_minutes(mode) * 60 * 1000
       end
 
     the_data =
       case File.read("/tmp/eventcollector-#{mode}-data") do
         {:ok, bin} -> bin |> Jason.decode!()
-        {:error, reason} -> []
+        {:error, _reason} -> []
       end
 
     {the_when, the_data}
