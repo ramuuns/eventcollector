@@ -292,7 +292,7 @@ defmodule Eventcollector.Collector do
 
         Depo.write(
           db,
-          "CREATE TABLE errors_warnings (event_id, epoch, persona, action, the_request, type, key, item)"
+          "CREATE TABLE errors_warnings (event_id, epoch, persona, action, the_request, type, key, cnt, item)"
         )
       end)
 
