@@ -14,7 +14,13 @@ defmodule Frog do
       ) do
     Task.start(fn ->
       data = errors |> parse_error([])
-      data = warnings |> Map.to_list() |> parse_warning(data)
+
+      data =
+        case warnings do
+          [] -> data
+          _ -> warnings |> Map.to_list() |> parse_warning(data)
+        end
+
       {:ok, db} = Depo.open("/opt/eventcollector/data/events.db")
 
       Depo.transact(db, fn ->
