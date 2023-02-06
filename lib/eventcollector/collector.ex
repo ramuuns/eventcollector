@@ -133,7 +133,7 @@ defmodule Eventcollector.Collector do
   defp add_to_result(result, item) do
     persona = item["persona"]
     action = item["action"]
-    [method, _] = item["tuning"]["the_request"] |> String.split(" ")
+    [method, _] = item["tuning"]["the_request"] |> String.split(" ", parts: 2)
 
     counters = [
       "#{persona}.all.nr_requests",
