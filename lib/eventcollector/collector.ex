@@ -37,6 +37,7 @@ defmodule Eventcollector.Collector do
         {minutely, quarterly, hourly}
       ) do
     Frog.handle_event(event)
+    Eventcollector.Filters.apply_filters(EventCollectorFilters, event)
     {:noreply, {[event | minutely], [event | quarterly], [event | hourly]}}
   end
 

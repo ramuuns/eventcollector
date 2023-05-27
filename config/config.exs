@@ -286,6 +286,7 @@ config :eventcollector,
   graphite_host: json_config["graphite_host"] |> to_charlist,
   graphite_port: json_config["graphite_port"],
   app_port: json_config["app_port"],
+  filter_dir: json_config["filter_dir"],
   halt_allow_ips:
     json_config["halt_allow_ips"]
     |> Enum.map(fn ip ->

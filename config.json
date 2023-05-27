@@ -2,5 +2,6 @@
   "graphite_host": "127.0.0.1",
   "graphite_port": 2003,
   "app_port": 4001,
+  "filter_dir": "/tmp/eventcollector/filters",
   "halt_allow_ips": ["127.0.0.1"]
 }

@@ -12,7 +12,8 @@ defmodule Eventcollector.Application do
        scheme: :http,
        plug: Eventcollector.Plug,
        options: [port: Application.fetch_env!(:eventcollector, :app_port)]},
-      {Eventcollector.Collector, name: EventCollector}
+      {Eventcollector.Collector, name: EventCollector},
+      {Eventcollector.Filters, name: EventCollectorFilters}
       # Starts a worker by calling: Eventcollector.Worker.start_link(arg)
       # {Eventcollector.Worker, arg}
     ]
