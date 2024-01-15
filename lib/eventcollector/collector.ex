@@ -7,7 +7,7 @@ defmodule Eventcollector.Collector do
     {m_send, m_data} = get_initial_state(:minutely)
     {q_send, q_data} = get_initial_state(:quarterly)
     {h_send, h_data} = get_initial_state(:hourly)
-    [m_send, q_send, h_send] |> IO.inspect()
+    # [m_send, q_send, h_send] |> IO.inspect()
     Process.send_after(self(), :minutely, m_send)
     Process.send_after(self(), :quarterly, q_send)
     Process.send_after(self(), :hourly, h_send)
@@ -228,7 +228,7 @@ defmodule Eventcollector.Collector do
         |> Enum.each(fn key ->
           val = Map.get(result, key)
           key = "tuning.#{mode}.#{key}"
-          message = '#{key} #{val} #{epoch}\n' |> IO.inspect()
+          message = ~c"#{key} #{val} #{epoch}\n"
           :ok = :gen_tcp.send(socket, message)
         end)
 

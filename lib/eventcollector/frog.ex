@@ -74,7 +74,7 @@ defmodule Frog do
 
   def make_key(err) do
     [top_line | _] = String.split(err, "\n")
-    :crypto.hash(:sha256, top_line) |> Base.encode64()
+    :crypto.hash(:sha256, top_line |> merge_similar()) |> Base.encode64()
   end
 
   def cleanup() do
@@ -90,5 +90,12 @@ defmodule Frog do
     end)
 
     :ok = Depo.close(db)
+  end
+
+  defp merge_similar(str) do
+    str
+    |> String.replace(~r"(\d+)ms", "XXms", global: true)
+    |> String.replace(~r"(\d+)s", "XXs", gloabl: true)
+    |> String.replace(~r"<[^>]+>", "<>", global: true)
   end
 end
