@@ -208,6 +208,19 @@ defmodule Eventcollector.Collector do
           keys
       end
 
+    keys =
+      case item do
+        %{"tuning" => %{"process_memory_bytes_added" => bytes_added}} ->
+          [
+            {"#{persona}.all.process_memory_bytes_added", bytes_added},
+            {"#{persona}.action.#{action}.process_memory_bytes_added", bytes_added}
+            | keys
+          ]
+
+        _ ->
+          keys
+      end
+
     keys
     |> Enum.reduce(result, fn {key, value}, result ->
       result |> Map.put(key, [value | Map.get(result, key, [])])
