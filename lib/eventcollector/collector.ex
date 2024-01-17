@@ -143,6 +143,18 @@ defmodule Eventcollector.Collector do
       "#{persona}.action.#{action}.nr_requests_#{method}"
     ]
 
+    counters =
+      case item do
+        %{"tuning" => %{"status" => status}} ->
+          [
+            {"#{persona}.all.status_#{status}"},
+            {"#{persona}.action.#{action}.status_#{status}"} | counters
+          ]
+
+        _ ->
+          counters
+      end
+
     counters
     |> Enum.reduce(result, fn key, result ->
       result |> Map.put(key, Map.get(result, key, 0) + 1)
