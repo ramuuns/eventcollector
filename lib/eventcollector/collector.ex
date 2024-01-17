@@ -74,10 +74,12 @@ defmodule Eventcollector.Collector do
   def handle_info(:hourly, {minutely, quarterly, hourly}) do
     Process.send_after(self(), :hourly, 60 * 60 * 1000)
     store_when(60 * 60 * 1000, :hourly)
+
     Task.async(fn ->
       process_data(hourly, :hourly)
       Frog.cleanup()
     end)
+
     {:noreply, {minutely, quarterly, []}}
   end
 
