@@ -58,7 +58,7 @@ defmodule Eventcollector.Collector do
   def handle_info(:minutely, {minutely, quarterly, hourly}) do
     Process.send_after(self(), :minutely, 60 * 1000)
     store_when(60 * 1000, :minutely)
-    process_data(minutely, :minutely)
+    Task.async(fn -> process_data(minutely, :minutely) end)
     {:noreply, {[], quarterly, hourly}}
   end
 
@@ -66,7 +66,7 @@ defmodule Eventcollector.Collector do
   def handle_info(:quarterly, {minutely, quarterly, hourly}) do
     Process.send_after(self(), :quarterly, 15 * 60 * 1000)
     store_when(15 * 60 * 1000, :quarterly)
-    process_data(quarterly, :quarterly)
+    Task.async(fn -> process_data(quarterly, :quarterly) end)
     {:noreply, {minutely, [], hourly}}
   end
 
@@ -74,9 +74,16 @@ defmodule Eventcollector.Collector do
   def handle_info(:hourly, {minutely, quarterly, hourly}) do
     Process.send_after(self(), :hourly, 60 * 60 * 1000)
     store_when(60 * 60 * 1000, :hourly)
-    process_data(hourly, :hourly)
-    Frog.cleanup()
+    Task.async(fn ->
+      process_data(hourly, :hourly)
+      Frog.cleanup()
+    end)
     {:noreply, {minutely, quarterly, []}}
+  end
+
+  @impl true
+  def handle_info(_, data) do
+    {:noreply, data}
   end
 
   defp process_data(data, mode) do
@@ -147,8 +154,8 @@ defmodule Eventcollector.Collector do
       case item do
         %{"tuning" => %{"status" => status}} ->
           [
-            {"#{persona}.all.status_#{status}"},
-            {"#{persona}.action.#{action}.status_#{status}"} | counters
+            "#{persona}.all.status_#{status}",
+            "#{persona}.action.#{action}.status_#{status}" | counters
           ]
 
         _ ->
@@ -240,8 +247,8 @@ defmodule Eventcollector.Collector do
   end
 
   defp send_data(result, mode) do
-    IO.inspect("sending data for #{mode}")
     epoch = :os.system_time(:seconds)
+    IO.inspect("sending data for #{mode} (#{epoch})")
     port = Application.fetch_env!(:eventcollector, :graphite_port)
     host = Application.fetch_env!(:eventcollector, :graphite_host)
     opts = [:binary, active: false]
