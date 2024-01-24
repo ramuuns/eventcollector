@@ -263,7 +263,18 @@ defmodule Eventcollector.Collector do
           val = Map.get(result, key)
           key = "tuning.#{mode}.#{key}"
           message = ~c"#{key} #{val} #{epoch}\n"
-          :ok = :gen_tcp.send(socket, message)
+
+          case :gen_tcp.send(socket, message) do
+            :ok ->
+              :ok
+
+            other ->
+              {
+                other,
+                "failed sending #{message}"
+              }
+              |> IO.inspect()
+          end
         end)
 
         :gen_tcp.close(socket)

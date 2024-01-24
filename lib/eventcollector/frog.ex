@@ -21,34 +21,36 @@ defmodule Frog do
           _ -> warnings |> Map.to_list() |> parse_warning(data)
         end
 
-      {:ok, db} = Depo.open("/opt/eventcollector/data/events.db")
+      unless Enum.empty?(data) do
+        {:ok, db} = Depo.open("/opt/eventcollector/data/events.db")
 
-      Depo.transact(db, fn ->
-        Depo.teach(db, %{
-          new_event: "INSERT INTO events (id, epoch, event) VALUES (?1, ?2, ?3)",
-          new_error_warning:
-            "INSERT INTO errors_warnings (event_id, epoch, persona, action, the_request, type, key, cnt, item) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)"
-        })
+        Depo.transact(db, fn ->
+          Depo.teach(db, %{
+            new_event: "INSERT INTO events (id, epoch, event) VALUES (?1, ?2, ?3)",
+            new_error_warning:
+              "INSERT INTO errors_warnings (event_id, epoch, persona, action, the_request, type, key, cnt, item) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)"
+          })
 
-        Depo.write(db, :new_event, [id, epoch, Jason.encode!(event)])
+          Depo.write(db, :new_event, [id, epoch, Jason.encode!(event)])
 
-        data
-        |> Enum.each(fn {type, key, item, cnt} ->
-          Depo.write(db, :new_error_warning, [
-            id,
-            epoch,
-            persona,
-            action,
-            the_request,
-            type,
-            key,
-            cnt,
-            item
-          ])
+          data
+          |> Enum.each(fn {type, key, item, cnt} ->
+            Depo.write(db, :new_error_warning, [
+              id,
+              epoch,
+              persona,
+              action,
+              the_request,
+              type,
+              key,
+              cnt,
+              item
+            ])
+          end)
         end)
-      end)
 
-      :ok = Depo.close(db)
+        :ok = Depo.close(db)
+      end
     end)
 
     :ok
@@ -97,5 +99,7 @@ defmodule Frog do
     |> String.replace(~r"(\d+)ms", "XXms", global: true)
     |> String.replace(~r"(\d+)s", "XXs", gloabl: true)
     |> String.replace(~r"<[^>]+>", "<>", global: true)
+    #  use only the first 100 chars of the error message (not that we can normalize otherwise errors with a bunch of keys in them)
+    |> String.slice(0, 100)
   end
 end
